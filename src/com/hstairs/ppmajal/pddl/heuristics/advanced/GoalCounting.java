@@ -50,7 +50,7 @@ public class GoalCounting implements SearchHeuristic {
                 }
 
             }
-            System.out.println("State", s);
+            System.out.println(c);
         }
         return (float) c;
     }
