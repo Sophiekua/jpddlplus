@@ -42,17 +42,17 @@ public class GoalCounting implements SearchHeuristic {
     public float computeEstimate(State s) {
         int c = 0;
         Condition goals = this.problem.getGoals();
-        if (goals instanceof AndCond){
-            for (Object c1: ((AndCond) goals).sons){
-                Condition con = (Condition)c1;
-                if (!s.satisfy(con)){
+        if (goals instanceof AndCond) {
+            for (Object c1 : ((AndCond) goals).sons) {
+                Condition con = (Condition) c1;
+                if (!s.satisfy(con)) {
                     c++;
                 }
-               
+
             }
-        print(s)
+            System.out.println("State", s);
         }
-        return (float)c;
+        return (float) c;
     }
 
     @Override
