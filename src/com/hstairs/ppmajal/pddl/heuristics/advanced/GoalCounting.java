@@ -30,12 +30,14 @@ import java.util.Collection;
  *
  * @author enrico
  */
-public class GoalCounting implements SearchHeuristic{
+public class GoalCounting implements SearchHeuristic {
 
     final private PDDLProblem problem;
-    public GoalCounting(PDDLProblem problem){
+
+    public GoalCounting(PDDLProblem problem) {
         this.problem = problem;
     }
+
     @Override
     public float computeEstimate(State s) {
         int c = 0;
@@ -48,6 +50,7 @@ public class GoalCounting implements SearchHeuristic{
                 }
                
             }
+        print(s)
         }
         return (float)c;
     }
@@ -56,6 +59,7 @@ public class GoalCounting implements SearchHeuristic{
     public Object[] getTransitions(boolean helpful) {
         return problem.getActions().toArray();
     }
+
     @Override
     public Collection<TransitionGround> getAllTransitions() {
         return problem.getTransitions();
