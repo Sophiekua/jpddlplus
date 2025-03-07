@@ -49,9 +49,9 @@ public class GoalCounting implements SearchHeuristic {
                 if (!s.satisfy(con)) { // if the state doesn't equal the goal condition then add 1 to c
                     c++;
                 }
-
+                System.out.println("State ", s, "c", c); // print state and corresponding c
             }
-            System.out.println(c);
+
         }
         return (float) c;
     }
