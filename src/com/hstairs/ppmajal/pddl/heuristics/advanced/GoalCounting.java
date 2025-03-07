@@ -38,6 +38,7 @@ public class GoalCounting implements SearchHeuristic {
         this.problem = problem;
     }
 
+    // calculates an estimate for how far away the current state is from the goal
     @Override
     public float computeEstimate(State s) {
         int c = 0;
@@ -45,7 +46,7 @@ public class GoalCounting implements SearchHeuristic {
         if (goals instanceof AndCond) {
             for (Object c1 : ((AndCond) goals).sons) {
                 Condition con = (Condition) c1;
-                if (!s.satisfy(con)) {
+                if (!s.satisfy(con)) { // if the state doesn't equal the goal condition then add 1 to c
                     c++;
                 }
 

@@ -26,7 +26,7 @@ import java.util.Map;
 public class PDDLHeuristic {
 
     public static SearchHeuristic getHeuristic(String heuristic,
-                                               PDDLProblem heuristicProblem, String redundantConstraints,
+            PDDLProblem heuristicProblem, String redundantConstraints,
             boolean helpfulActionsPruning, boolean helpfulTransitions, boolean toOneTransformation) {
         Map<AndCond, Collection<IntArraySet>> redConstraint = null;
         if ("smart".equals(redundantConstraints)) {
@@ -40,16 +40,16 @@ public class PDDLHeuristic {
             case "hadd": {
                 return new H1(heuristicProblem, true, false, false,
                         redundantConstraints, helpfulActionsPruning, false, helpfulTransitions,
-                        false, redConstraint,toOneTransformation);
+                        false, redConstraint, toOneTransformation);
 
             }
             case "hradd": {
-                return new H1(heuristicProblem, true, false, false, "brute", false, false, false, false,false);
+                return new H1(heuristicProblem, true, false, false, "brute", false, false, false, false, false);
 
             }
 
             case "hrmax": {
-                return new H1(heuristicProblem, false, false, false, "brute", false, false, false, false,false);
+                return new H1(heuristicProblem, false, false, false, "brute", false, false, false, false, false);
 
             }
             case "h1res": {
@@ -69,22 +69,27 @@ public class PDDLHeuristic {
 
             }
             case "hmax": {
-                return new H1(heuristicProblem, false, false, false, redundantConstraints, false, false, false, false, redConstraint,false);
+                return new H1(heuristicProblem, false, false, false, redundantConstraints, false, false, false, false,
+                        redConstraint, false);
 
             }
             case "hmrp": {
-                return new H1(heuristicProblem, true, true, false, redundantConstraints, helpfulActionsPruning, false, helpfulTransitions, true, redConstraint,toOneTransformation);
+                return new H1(heuristicProblem, true, true, false, redundantConstraints, helpfulActionsPruning, false,
+                        helpfulTransitions, true, redConstraint, toOneTransformation);
             }
             case "hmrp_fix": {
-                return new H1Fix(heuristicProblem, false, false, redundantConstraints, helpfulActionsPruning, false, false, true, false);
+                return new H1Fix(heuristicProblem, false, false, redundantConstraints, helpfulActionsPruning, false,
+                        false, true, false);
 
             }
             case "hmrp_easy_fix": {
-                return new H1Fix(heuristicProblem, true, true, redundantConstraints, helpfulActionsPruning, false, false, false, false);
+                return new H1Fix(heuristicProblem, true, true, redundantConstraints, helpfulActionsPruning, false,
+                        false, false, false);
 
             }
             case "hmrp_fix_tran": {
-                return new H1Fix(heuristicProblem, false, false, redundantConstraints, helpfulActionsPruning, false, false, false, true);
+                return new H1Fix(heuristicProblem, false, false, redundantConstraints, helpfulActionsPruning, false,
+                        false, false, true);
 
             }
 
@@ -118,7 +123,7 @@ public class PDDLHeuristic {
                 return new LM(heuristicProblem, "lp", redundantConstraints, "gurobi");
 
             }
-            case "hgen":{
+            case "hgen": {
                 System.out.println("HGEN selected");
                 System.out.println(redundantConstraints);
                 return new HGen(heuristicProblem);
