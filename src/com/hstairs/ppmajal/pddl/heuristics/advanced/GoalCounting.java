@@ -50,7 +50,7 @@ public class GoalCounting implements SearchHeuristic {
                     c++;
                 }
             }
-            System.out.printf("number: %d\n", c);
+            System.out.printf("out of place number: %d\n", c);
         }
         return (float) c;
     }

@@ -244,7 +244,8 @@ public class ENHSP {
                 + "hmrp, heuristic based on MRP extraction\n"
                 + "blcost, goal sensitive heuristic (1 to non goal-states, 0 to goal-states)\n"
                 + "blind, full blind heuristic (0 to all states)"
-                + "gc, goal counting heuristic");
+                + "gc, goal counting heuristic"
+                + "oop, out of place heuristic");
         options.addOption("s", true, "allows to select search strategy (default is WAStar):\n"
                 + "gbfs, Greedy Best First Search (f(n) = h(n))\n"
                 + "lazygbfs, Greedy Best First Search (f(n) = h(n)) with lazy evaluation\n"

@@ -11,6 +11,7 @@ import com.hstairs.ppmajal.pddl.heuristics.advanced.GoalCounting;
 import com.hstairs.ppmajal.pddl.heuristics.advanced.H1;
 import com.hstairs.ppmajal.pddl.heuristics.advanced.HGen;
 import com.hstairs.ppmajal.pddl.heuristics.advanced.LM;
+import com.hstairs.ppmajal.pddl.heuristics.advanced.OutOfPlace;
 import com.hstairs.ppmajal.PDDLProblem.PDDLProblem;
 import com.hstairs.ppmajal.search.SearchHeuristic;
 import com.hstairs.ppmajal.pddl.heuristics.advanced.experimental.H1Fix;
@@ -36,6 +37,9 @@ public class PDDLHeuristic {
         switch (heuristic) {
             case "gc": {
                 return new GoalCounting(heuristicProblem);
+            }
+            case "oop": {
+                return new OutOfPlace(heuristicProblem);
             }
             case "hadd": {
                 return new H1(heuristicProblem, true, false, false,
