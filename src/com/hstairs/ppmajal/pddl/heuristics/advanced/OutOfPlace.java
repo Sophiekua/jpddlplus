@@ -1,5 +1,7 @@
 package com.hstairs.ppmajal.pddl.heuristics.advanced;
 
+import java.util.ArrayList;
+
 import com.hstairs.ppmajal.conditions.AndCond;
 import com.hstairs.ppmajal.conditions.Condition;
 import com.hstairs.ppmajal.PDDLProblem.PDDLProblem;
@@ -49,11 +51,12 @@ public class OutOfPlace implements SearchHeuristic {
         List<Double> stateNumFluent = s.getNumFluents();
 
         List<Double> goalNumFluent = new ArrayList<>();
+        
 
-        for (NumFluent nf : problem.getGoals().getInvolvedFluents()) {
-            double goalValue = problem.getInitNumFluentsValues().get(nf).getNumber().doubleValue();
-            goalNumFluent.add(goalValue);
-        }
+        //for (NumFluent nf : problem.getGoals().getInvolvedFluents()) {
+            //double goalValue = problem.getInitNumFluentsValues().get(nf).getNumber().doubleValue();
+            //goalNumFluent.add(goalValue);
+        //}
         for (int i = 0; i < stateNumFluent.size(); i++) {
             numDiff += Math.abs(stateNumFluent.get(i) - goalNumFluent.get(i));
         }
