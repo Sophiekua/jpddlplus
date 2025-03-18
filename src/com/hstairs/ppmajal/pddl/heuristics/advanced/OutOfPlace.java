@@ -9,13 +9,12 @@ import com.hstairs.ppmajal.problem.State;
 import com.hstairs.ppmajal.search.SearchHeuristic;
 import com.hstairs.ppmajal.transition.TransitionGround;
 
-import sequential_problems.numericPrecondition;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import com.hstairs.ppmajal.expressions.NumFluent;
+import com.hstairs.ppmajal.expressions.PDDLNumber;
 
 /**
  *
@@ -49,16 +48,31 @@ public class OutOfPlace implements SearchHeuristic {
         }
 
         List<Double> stateNumFluent = s.getNumFluents();
+        List NumFluentTest = s.getNumFluents();
+        NumFluent NumFluentRef = this.problem.getNumfluentReference("total_doctor_cost");
+        System.out.println(NumFluentTest);
+        System.out.println(NumFluentRef);
+
+        Set<NumFluent> goalFluents = problem.getGoals().getInvolvedFluents();
+        //System.out.println(goalFluents);
 
         List<Double> goalNumFluent = new ArrayList<>();
         
 
-        //for (NumFluent nf : problem.getGoals().getInvolvedFluents()) {
-            //double goalValue = problem.getInitNumFluentsValues().get(nf).getNumber().doubleValue();
-            //goalNumFluent.add(goalValue);
-        //}
-        for (int i = 0; i < stateNumFluent.size(); i++) {
+        for (NumFluent nf : goalFluents) {
+            PDDLNumber goalPDDLNumber = problem.getInitNumFluentsValues().get(nf);
+            double goalValue = (goalPDDLNumber != null) ? goalPDDLNumber.getNumber().doubleValue() : 0.0;
+            goalNumFluent.add(goalValue);
+        }
+        
+        //System.out.println(goalFluents);
+
+        int minSize = Math.min(stateNumFluent.size(), goalNumFluent.size());
+        //System.out.println(minSize);
+
+        for (int i = 0; i < minSize; i++) {
             numDiff += Math.abs(stateNumFluent.get(i) - goalNumFluent.get(i));
+            System.out.printf("state fluent: %.2f\n", stateNumFluent.get(i));
         }
 
         float hValue = c + numDiff;
