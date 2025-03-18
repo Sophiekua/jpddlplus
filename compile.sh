@@ -2,10 +2,16 @@
 
 # Destination directory for compiled files and the final JAR file
 output_directory="output"
-
+mkdir -p "$output_directory"
 # Compile Java source files
 echo "Compiling source files..."
 javac -d "$output_directory" -cp "jar_dependencies/*" $(find src -name '*.java')
+
+# Check if compilation was successful
+if [ $? -ne 0 ]; then
+    echo "Error: Compilation failed."
+    exit 1
+fi
 
 # Create a temporary directory to extract JAR file dependencies
 mkdir -p tmp_extracted_jars
