@@ -1,6 +1,7 @@
 package com.hstairs.ppmajal.pddl.heuristics.advanced;
 
 import java.util.Collection;
+import java.util.*;
 
 import com.hstairs.ppmajal.PDDLProblem.PDDLProblem;
 import com.hstairs.ppmajal.PDDLProblem.PDDLState;
@@ -8,6 +9,7 @@ import com.hstairs.ppmajal.conditions.AndCond;
 import com.hstairs.ppmajal.conditions.Condition;
 import com.hstairs.ppmajal.expressions.NumEffect;
 import com.hstairs.ppmajal.expressions.NumFluent;
+import com.hstairs.ppmajal.expressions.PDDLNumber;
 import com.hstairs.ppmajal.problem.State;
 import com.hstairs.ppmajal.search.SearchHeuristic;
 import com.hstairs.ppmajal.transition.Transition;
@@ -41,10 +43,22 @@ public class OutOfPlace implements SearchHeuristic {
                     missingGoals++;
 
                 }
-                
+
             }
 
         }
+
+        float cost = (float) currentDoctorCost + (float) futureDoctorCost;
+        float hValue = missingGoals + (cost);
+
+        System.out.printf("doctorCost: %f\n", cost);
+        System.out.printf("Out of Place Value: %f\n", hValue);
+        return hValue;
+    }
+
+    public double getMinFutureStateCost(PDDLState s) {
+
+        double minCost = Double.MAX_VALUE;
 
         for (Transition transition : problem.getTransitions()) {
             // Get all numeric effects from this transition
@@ -55,47 +69,76 @@ public class OutOfPlace implements SearchHeuristic {
                 if (numEffect.getFluentAffected().getName().equals("total_doctor_cost")) {
                     // Evaluate the numeric effect on the fluent
                     double effectValue = numEffect.getRight().eval(s);
-                    System.out.println(effectValue);
 
-                    futureDoctorCost += effectValue;
+                    System.out.println(effectValue);
+                    if (effectValue > 0) {  // Ignore reductions, since we want the minimum cost to reach the goal
+                        minCost = Math.min(minCost, effectValue);
+
+                    }
+                    if (minCost == Double.MAX_VALUE) {
+                        // If no applicable transition affects total_doctor_cost, return a default value
+                        System.err.println("No applicable transition affects total_doctor_cost. Returning default value.");
+                        return 0.0;  // Or any default value you want for the case where no transitions apply
+                    }
+                    System.out.println(minCost);
+                    // Return the minimum doctor cost
+
                 }
             }
         }
-
-        System.out.println(futureDoctorCost);
-        System.out.println(currentDoctorCost);
-
-        float cost = (float) currentDoctorCost + (float) futureDoctorCost;
-        float hValue = missingGoals + (cost / 10);
-
-        System.out.printf("doctorCost: %f\n", cost);
-        System.out.printf("Out of Place Value: %f\n", hValue);
-        return hValue;
+        return minCost;
     }
 
-    public double getStateTotalDoctorCost(State s) {
-        PDDLState pddlState = (PDDLState) s;  
-        // Look for the numeric fluent "total_doctor_cost"
-        NumFluent doctorCostFluent = (NumFluent) this.problem.getNumFluents().stream().filter(f -> ((NumFluent) f).getName().equals("total_doctor_cost")).findFirst().orElse(null);
-        System.out.println(doctorCostFluent);
+    public double getStateTotalDoctorCost(PDDLState s) {
 
-        if (doctorCostFluent != null) {
-            // Find the correct numeric fluent ID in the state
-            int[] id = PDDLState.getFromStateNFId2ProblemNFId();
-            System.out.println("ID array length: " + id.length);
-            System.out.println(id);
-            if (doctorCostFluent.getId() >= id.length) {
-                throw new RuntimeException("doctorCostFluent ID out of bounds: " + doctorCostFluent.getId() + ", max: " + id.length);
-            }
-            System.out.println("Doctor Cost Fluent ID: " + doctorCostFluent.getId());
-            int costid = id[doctorCostFluent.getId()];
-            // Return the value of the numeric fluent for the "total_doctor_cost" from the state
-            return (double) pddlState.getNumFluents().get(costid);
+        System.out.println(s);
+
+        System.out.println("All Numeric Fluents in Problem:");
+        
+        for (NumFluent f : problem.getNumFluentsInvolvedInInit()) {
+            System.out.println("Fluent: " + f.getName() + " | ID: " + f.getId() + " | Terms: " + f.getTerms());
         }
-        return 0.0;
-    }
+        // Look for the numeric fluent "total_doctor_cost"
+        Map<NumFluent, PDDLNumber> problemMap = problem.getInitNumFluentsValues();
 
+        System.out.println(problemMap);
+        NumFluent doctorCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("total_doctor_cost")).findFirst().orElseThrow();
+        System.out.println("doctor cost fluent: "+ doctorCostFluent);
+
+        PDDLNumber thingy = problemMap.get(doctorCostFluent);
+
+        double value = thingy.getNumber();
+        System.out.println(thingy.getNumber());
+
+        // Ensure the fluent is found and grounded
     
+        if (doctorCostFluent == null) {
+            System.err.println("Error: Fluent 'total_doctor_cost' not found.");
+            return 0.0;  // Return a default value
+        }
+
+        // List statelist = s.getNumFluents();
+        // System.out.println(statelist);
+
+        double fluentValue = 0.0;
+
+        for (NumFluent nf : NumFluent.numFluentsBank.values()) {
+            fluentValue =  s.fluentValue(nf);
+            System.out.println("fluent: " + nf + "value: " + fluentValue);
+
+            involvedfluents = s.getInvolvedNumericFluents();
+            //System.out.println("ID:" + nf.getId() + "->" + nf);
+        }
+
+        // Check for NaN and handle accordingly
+        // if (Double.isNaN(fluentValue)) {
+        //     System.err.println("Error: 'total_doctor_cost' is NaN in the current state.");
+        //     return 0.0;  // Return a default value
+        // }
+
+        // Return the valid fluent value
+        return fluentValue;
+    }
 
     @Override
     public Object[] getTransitions(boolean helpful) {
