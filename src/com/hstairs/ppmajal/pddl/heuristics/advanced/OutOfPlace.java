@@ -31,14 +31,15 @@ public class OutOfPlace implements SearchHeuristic {
     @Override
     public float computeEstimate(State s) {
         int missingGoals = 0;
-        double futureDoctorCost = 0.0;
         double currentDoctorCost = getStateTotalDoctorCost((PDDLState) s);
+        double futureDoctorCost = getMinFutureCost((PDDLState) s, (double) currentDoctorCost);
 
         Condition goals = this.problem.getGoals();
 
         if (goals instanceof AndCond) {
             for (Object c1 : ((AndCond) goals).sons) {
                 Condition con = (Condition) c1;
+
                 if (!s.satisfy(con)) { // if the state doesn't equal the goal condition then add 1 to c
                     missingGoals++;
 
@@ -48,44 +49,29 @@ public class OutOfPlace implements SearchHeuristic {
 
         }
 
-        float cost = (float) currentDoctorCost + (float) futureDoctorCost;
-        float hValue = missingGoals + (cost);
+        float cost = (float) futureDoctorCost - (float) currentDoctorCost;
+        float hValue = missingGoals + cost;
 
         System.out.printf("doctorCost: %f\n", cost);
         System.out.printf("Out of Place Value: %f\n", hValue);
         return hValue;
     }
 
-    public double getMinFutureStateCost(PDDLState s) {
+    public double getMinFutureCost(PDDLState s, double currentDoctorCost) {
 
-        double minCost = Double.MAX_VALUE;
+        double minCost = currentDoctorCost;
 
-        for (Transition transition : problem.getTransitions()) {
-            // Get all numeric effects from this transition
-            Collection<NumEffect> numericEffects = transition.getAllNumericEffects();
+        Map<NumFluent, PDDLNumber> problemMap = problem.getInitNumFluentsValues();
 
-            for (NumEffect numEffect : numericEffects) {
-                // Check if the numeric effect involves the "total_doctor_cost" fluent
-                if (numEffect.getFluentAffected().getName().equals("total_doctor_cost")) {
-                    // Evaluate the numeric effect on the fluent
-                    double effectValue = numEffect.getRight().eval(s);
+        System.out.println(problemMap);
+        NumFluent doctorCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("doctor_type_cost")).findFirst().orElseThrow();
+        System.out.println("doctor type cost fluent: "+ doctorCostFluent);
 
-                    System.out.println(effectValue);
-                    if (effectValue > 0) {  // Ignore reductions, since we want the minimum cost to reach the goal
-                        minCost = Math.min(minCost, effectValue);
-
-                    }
-                    if (minCost == Double.MAX_VALUE) {
-                        // If no applicable transition affects total_doctor_cost, return a default value
-                        System.err.println("No applicable transition affects total_doctor_cost. Returning default value.");
-                        return 0.0;  // Or any default value you want for the case where no transitions apply
-                    }
-                    System.out.println(minCost);
-                    // Return the minimum doctor cost
-
-                }
-            }
-        }
+        // for (Transition transition : problem.getTransitions()) {
+        //     // Get all numeric effects from this transition
+        //     Collection<NumEffect> numericEffects = transition.getAllNumericEffects();
+        // }
+            
         return minCost;
     }
 
@@ -93,11 +79,6 @@ public class OutOfPlace implements SearchHeuristic {
 
         System.out.println(s);
 
-        System.out.println("All Numeric Fluents in Problem:");
-        
-        for (NumFluent f : problem.getNumFluentsInvolvedInInit()) {
-            System.out.println("Fluent: " + f.getName() + " | ID: " + f.getId() + " | Terms: " + f.getTerms());
-        }
         // Look for the numeric fluent "total_doctor_cost"
         Map<NumFluent, PDDLNumber> problemMap = problem.getInitNumFluentsValues();
 
@@ -105,10 +86,10 @@ public class OutOfPlace implements SearchHeuristic {
         NumFluent doctorCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("total_doctor_cost")).findFirst().orElseThrow();
         System.out.println("doctor cost fluent: "+ doctorCostFluent);
 
-        PDDLNumber thingy = problemMap.get(doctorCostFluent);
+        // PDDLNumber thingy = problemMap.get(doctorCostFluent);
 
-        double value = thingy.getNumber();
-        System.out.println(thingy.getNumber());
+        // double value = thingy.getNumber();
+        // System.out.println(thingy.getNumber());
 
         // Ensure the fluent is found and grounded
     
@@ -117,24 +98,12 @@ public class OutOfPlace implements SearchHeuristic {
             return 0.0;  // Return a default value
         }
 
-        // List statelist = s.getNumFluents();
-        // System.out.println(statelist);
+        double fluentValue = s.fluentValue(doctorCostFluent);
 
-        double fluentValue = 0.0;
-
-        for (NumFluent nf : NumFluent.numFluentsBank.values()) {
-            fluentValue =  s.fluentValue(nf);
-            System.out.println("fluent: " + nf + "value: " + fluentValue);
-
-            involvedfluents = s.getInvolvedNumericFluents();
-            //System.out.println("ID:" + nf.getId() + "->" + nf);
-        }
-
-        // Check for NaN and handle accordingly
-        // if (Double.isNaN(fluentValue)) {
-        //     System.err.println("Error: 'total_doctor_cost' is NaN in the current state.");
-        //     return 0.0;  // Return a default value
-        // }
+        if (Double.isNaN(fluentValue)) {
+             System.err.println("Error: 'total_doctor_cost' is NaN in the current state.");
+             return 0.0;  // Return a default value
+         }
 
         // Return the valid fluent value
         return fluentValue;
