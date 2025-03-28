@@ -65,9 +65,9 @@ public class OutOfPlace implements SearchHeuristic {
         double minCost = currentDoctorCost;
         double genCost = 0.0;
         double specCost = 0.0; 
-        
-        double numOfGenAppointments = 0.0;
-        double numOfSpecAppointments = 0.0;
+
+        double genAppointmentCost = 0.0;
+        double specAppointmentCost = 0.0;
 
         Map<NumFluent, PDDLNumber> problemNumMap = problem.getInitNumFluentsValues();
 
@@ -82,11 +82,12 @@ public class OutOfPlace implements SearchHeuristic {
             String fullName = entry.getKey().toString();  // Get full name (or use getName() if appropriate)
             
             if (fullName.contains("general")) {
-                generalCost = entry.getValue();
+                genCost = entry.getValue().getNumber().doubleValue();;
             } else if (fullName.contains("specialist")) {
-                specialistCost = entry.getValue();
+                specCost = entry.getValue().getNumber().doubleValue();
             }
         }
+        System.out.println("gen cost: "+ genCost + "specCost: " + specCost);
 
         Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
         System.out.println(problemBoolMap);
@@ -95,18 +96,20 @@ public class OutOfPlace implements SearchHeuristic {
         System.out.println(genAppointments);
         for (BoolPredicate i : genAppointments.keySet()){
 
-            numOfGenAppointments += 1;
+            genAppointmentCost += genCost;
         }
 
-        System.out.println(numOfGenAppointments);
+        System.out.println(genAppointmentCost);
 
         Map<BoolPredicate, Boolean> specAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("specialist_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         System.out.println(specAppointments);
         for (BoolPredicate i : specAppointments.keySet()){
 
-            numOfSpecAppointments += 1;
+            specAppointmentCost += specCost;
         }
-        System.out.println(numOfSpecAppointments);
+        System.out.println(specAppointmentCost);
+
+        minCost = specAppointmentCost + genAppointmentCost;
 
         // for (Transition transition : problem.getTransitions()) {
         //     // Get all numeric effects from this transition
