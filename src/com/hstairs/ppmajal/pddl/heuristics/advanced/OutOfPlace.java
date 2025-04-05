@@ -45,15 +45,13 @@ public class OutOfPlace implements SearchHeuristic {
 
                 if (!s.satisfy(con)) { // if the state doesn't equal the goal condition then add 1 to c
                     missingGoals++;
-
                 }
-
             }
-
         }
 
         float cost = (float) futureDoctorCost - (float) currentDoctorCost;
-        float hValue = missingGoals + cost;
+        float normCost = (float) cost/ (float) futureDoctorCost;
+        float hValue = missingGoals + normCost;
 
         System.out.printf("doctorCost: %f\n", cost);
         System.out.printf("Out of Place Value: %f\n", hValue);
@@ -110,11 +108,6 @@ public class OutOfPlace implements SearchHeuristic {
         System.out.println(specAppointmentCost);
 
         minCost = specAppointmentCost + genAppointmentCost;
-
-        // for (Transition transition : problem.getTransitions()) {
-        //     // Get all numeric effects from this transition
-        //     Collection<NumEffect> numericEffects = transition.getAllNumericEffects();
-        // }
             
         return minCost;
     }
