@@ -21,6 +21,7 @@ package com.hstairs.ppmajal.problem;
 import com.hstairs.ppmajal.conditions.Condition;
 import com.hstairs.ppmajal.transition.TransitionGround;
 import java.util.List;
+import java.util.BitSet;
 
 /**
  * @author enrico
@@ -59,5 +60,7 @@ public abstract class State {
     public abstract List getNumFluents();
 
     public abstract int getBoolFluentsSize();
+
+    //public abstract BitSet getBoolFluents();
 
 }

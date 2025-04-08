@@ -49,8 +49,8 @@ public class OutOfPlace implements SearchHeuristic {
             }
         }
 
-        float cost = (float) futureDoctorCost - (float) currentDoctorCost;
-        float normCost = (float) cost/ (float) futureDoctorCost;
+        float cost = (float) futureDoctorCost + (float) currentDoctorCost;
+        //float normCost = (float) cost/ (float) futureDoctorCost; //normalise the cost to 
         float hValue = missingGoals + normCost;
 
         System.out.printf("doctorCost: %f\n", cost);
@@ -87,27 +87,50 @@ public class OutOfPlace implements SearchHeuristic {
         }
         System.out.println("gen cost: "+ genCost + "specCost: " + specCost);
 
-        Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
-        System.out.println(problemBoolMap);
+        // Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
+        // System.out.println(problemBoolMap);
 
-        Map<BoolPredicate, Boolean> genAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("general_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        System.out.println(genAppointments);
-        for (BoolPredicate i : genAppointments.keySet()){
+        // Map<BoolPredicate, Boolean> genAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("general_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        // System.out.println(genAppointments);
+        // for (BoolPredicate i : genAppointments.keySet()){
 
-            genAppointmentCost += genCost;
+        //     genAppointmentCost += genCost;
+        // }
+
+        // System.out.println(genAppointmentCost);
+
+        // Map<BoolPredicate, Boolean> specAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("specialist_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        // System.out.println(specAppointments);
+        // for (BoolPredicate i : specAppointments.keySet()){
+
+        //     specAppointmentCost += specCost;
+        // }
+        // System.out.println(specAppointmentCost);
+
+        // minCost = specAppointmentCost + genAppointmentCost;
+
+        //More dynamic way to calculate remaining cost left - needs testing
+        BitSet boolFluents = s.getBoolFluents();
+
+        Map<BoolPredicate, Boolean> currentBoolFluents = problem.getInitBoolFluentsValues();
+
+        for (Map.Entry<BoolPredicate, Boolean> entry : currentBoolFluents.entrySet()) {
+            BoolPredicate pred = entry.getKey();
+            String predName = pred.getName();
+            int fluentId = pred.getId();  // This maps to BitSet index
+
+            boolean valueInState = boolFluents.get(fluentId);  // Current truth value in state
+
+            // If the appointment hasn't happened yet
+            if (predName.equals("general_appointment") && !valueInState) {
+                minCost += genCost;
+            }
+
+            if (predName.equals("specialist_appointment") && !valueInState) {
+                minCost += specCost;
+            }
         }
-
-        System.out.println(genAppointmentCost);
-
-        Map<BoolPredicate, Boolean> specAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("specialist_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        System.out.println(specAppointments);
-        for (BoolPredicate i : specAppointments.keySet()){
-
-            specAppointmentCost += specCost;
-        }
-        System.out.println(specAppointmentCost);
-
-        minCost = specAppointmentCost + genAppointmentCost;
+        System.out.println(minCost);
             
         return minCost;
     }

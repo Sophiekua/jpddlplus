@@ -68,6 +68,11 @@ protected DoubleArrayList numFluents;
         return boolFluents.cardinality();
     }
 
+    
+    public BitSet getBoolFluents() {
+        return (BitSet) this.boolFluents.clone();
+    }
+
     public PDDLState ( ) {
         super();
     }
