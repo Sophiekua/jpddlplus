@@ -70,7 +70,7 @@ protected DoubleArrayList numFluents;
 
     
     public BitSet getBoolFluents() {
-        return (BitSet) this.boolFluents.clone();
+        return (BitSet) this.boolFluents;
     }
 
     public PDDLState ( ) {
