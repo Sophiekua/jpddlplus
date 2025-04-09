@@ -49,18 +49,18 @@ public class OutOfPlace implements SearchHeuristic {
             }
         }
 
-        float cost = (float) futureDoctorCost + (float) currentDoctorCost;
-        //float normCost = (float) cost/ (float) futureDoctorCost; //normalise the cost to 
-        float hValue = missingGoals + normCost;
-
-        System.out.printf("doctorCost: %f\n", cost);
+        //float cost = (float) futureDoctorCost - (float) currentDoctorCost;
+       
+        float hValue = missingGoals + (float) futureDoctorCost;
+        //float hValue = missingGoals + (float) cost;
+        System.out.printf("doctorCost: %f\n", futureDoctorCost);
         System.out.printf("Out of Place Value: %f\n", hValue);
         return hValue;
     }
 
     public double getMinFutureCost(PDDLState s, double currentDoctorCost) {
 
-        double minCost = currentDoctorCost;
+        double minCost = 0.0;
         double genCost = 0.0;
         double specCost = 0.0; 
 
@@ -68,8 +68,9 @@ public class OutOfPlace implements SearchHeuristic {
         double specAppointmentCost = 0.0;
 
         Map<NumFluent, PDDLNumber> problemNumMap = problem.getInitNumFluentsValues();
+        Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
 
-        System.out.println(problemNumMap);
+        //System.out.println(problemNumMap);
         // NumFluent generalCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("doctor_type_cost").orElseThrow();
         // System.out.println("general type cost fluent: "+ generalCostFluent);
 
@@ -85,9 +86,43 @@ public class OutOfPlace implements SearchHeuristic {
                 specCost = entry.getValue().getNumber().doubleValue();
             }
         }
-        System.out.println("gen cost: "+ genCost + "specCost: " + specCost);
 
-        // Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
+        Map<BoolPredicate, Boolean> doctorType = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("specialises_in")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        System.out.println("doctor type fluents : "+ doctorType);
+
+        Map<String, Double> doctorCosts = new HashMap<>();
+
+        // Iterate through the doctor specializations and assign the corresponding costs
+        for (Map.Entry<BoolPredicate, Boolean> entry : doctorType.entrySet()) {
+            String fullName = entry.getKey().toString();  
+            boolean isSpecialist = entry.getValue();  
+
+            // Get the doctor ID and specialization type from the full name
+            String[] parts = fullName.split(" ");  // Split based on spaces to get doctor ID and specialization type
+            String doctorId = parts[1];  // Doctor ID will be the second part
+            String specializationType = parts[2];  // Specialization type will be the third part (general/specialist)
+
+            // Assign the cost based on specialization
+            if (specializationType.contains("general")) {
+                doctorCosts.put(doctorId, genCost);  // If general, assign general cost
+            } else if (specializationType.contains("specialist")) {
+                doctorCosts.put(doctorId, specCost);  // If specialist, assign specialist cost
+            }
+        }
+        //System.out.println(doctorCosts);
+
+        // for (Map.Entry<NumFluent, PDDLNumber> entry : typeCostFluent.entrySet()) {
+        //     String fullName = entry.getKey().toString();  // Get full name (or use getName() if appropriate)
+            
+        //     if (fullName.contains("general")) {
+        //         genCost = entry.getValue().getNumber().doubleValue();;
+        //     } else if (fullName.contains("specialist")) {
+        //         specCost = entry.getValue().getNumber().doubleValue();
+        //     }
+        // }        
+        //System.out.println("gen cost: "+ genCost + "specCost: " + specCost);
+
+    
         // System.out.println(problemBoolMap);
 
         // Map<BoolPredicate, Boolean> genAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("general_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -112,23 +147,52 @@ public class OutOfPlace implements SearchHeuristic {
         //More dynamic way to calculate remaining cost left - needs testing
         BitSet boolFluents = s.getBoolFluents();
 
-        Map<BoolPredicate, Boolean> currentBoolFluents = problem.getInitBoolFluentsValues();
+        //System.out.println(boolFluents);
 
-        for (Map.Entry<BoolPredicate, Boolean> entry : currentBoolFluents.entrySet()) {
-            BoolPredicate pred = entry.getKey();
-            String predName = pred.getName();
-            int fluentId = pred.getId();  // This maps to BitSet index
+        Map<String, Double> patientCostMap = new HashMap<>();
 
-            boolean valueInState = boolFluents.get(fluentId);  // Current truth value in state
+        for (BoolPredicate pred : PDDLProblem.booleanFluents) {
 
-            // If the appointment hasn't happened yet
-            if (predName.equals("general_appointment") && !valueInState) {
-                minCost += genCost;
+          
+            if (pred.getName().contains("scheduled")) {
+
+                int index = pred.getId();
+                boolean isScheduled = boolFluents.get(index); 
+               
+                //boolean isScheduled = s.holds(pred);
+
+                if (!isScheduled) {
+
+                    String[] parts = pred.toString().split(" ");
+                    String patientId = parts[1];
+                    String doctorId = parts[2];
+        
+                    double doctorCost = doctorCosts.get(doctorId);
+        
+                    //System.out.println("patient id" + patientId);
+                   
+                    //System.out.println("dr cost" + doctorCost);
+                    
+                    // If the patient already has a cost recorded, take the minimum between the current cost and the new cost
+                    if (!patientCostMap.containsKey(patientId)) {
+                        // Store the first cost for the patient if not already stored
+                        patientCostMap.put(patientId, doctorCost);
+                        //System.out.println("cost Map:" + patientCostMap);
+                    } else {
+                        // If already stored, update the cost to the minimum cost
+                        double currentCost = patientCostMap.get(patientId);
+                        patientCostMap.put(patientId, Math.min(currentCost, doctorCost));
+                        //System.out.println("cost Map:" + patientCostMap);
+                    }
+                }
             }
-
-            if (predName.equals("specialist_appointment") && !valueInState) {
-                minCost += specCost;
-            }
+        }
+        System.out.println(patientCostMap);
+        
+        for (double cost : patientCostMap.values()) {
+            System.out.println(cost);
+           
+            minCost += cost;  // Sum up the individual patient costs
         }
         System.out.println(minCost);
             
@@ -137,14 +201,14 @@ public class OutOfPlace implements SearchHeuristic {
 
     public double getStateTotalDoctorCost(PDDLState s) {
 
-        System.out.println(s);
+        //System.out.println(s);
 
         // Look for the numeric fluent "total_doctor_cost"
         Map<NumFluent, PDDLNumber> problemMap = problem.getInitNumFluentsValues();
 
-        System.out.println(problemMap);
+        //System.out.println(problemMap);
         NumFluent doctorCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("total_doctor_cost")).findFirst().orElseThrow();
-        System.out.println("doctor cost fluent: "+ doctorCostFluent);
+        //System.out.println("doctor cost fluent: "+ doctorCostFluent);
 
         if (doctorCostFluent == null) {
             System.err.println("Error: Fluent 'total_doctor_cost' not found.");
