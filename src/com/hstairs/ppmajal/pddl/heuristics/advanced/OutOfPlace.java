@@ -49,10 +49,11 @@ public class OutOfPlace implements SearchHeuristic {
             }
         }
 
-        //float cost = (float) futureDoctorCost - (float) currentDoctorCost;
+      
        
         float hValue = missingGoals + (float) futureDoctorCost;
         //float hValue = missingGoals + (float) cost;
+
         System.out.printf("doctorCost: %f\n", futureDoctorCost);
         System.out.printf("Out of Place Value: %f\n", hValue);
         return hValue;
@@ -67,18 +68,19 @@ public class OutOfPlace implements SearchHeuristic {
         double genAppointmentCost = 0.0;
         double specAppointmentCost = 0.0;
 
+        //Get all num fluents from problem file
         Map<NumFluent, PDDLNumber> problemNumMap = problem.getInitNumFluentsValues();
+
+        //Get all bool fluents from problem file
         Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
 
-        //System.out.println(problemNumMap);
-        // NumFluent generalCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("doctor_type_cost").orElseThrow();
-        // System.out.println("general type cost fluent: "+ generalCostFluent);
-
+     
+        //filter for doctor_type_cost
         Map<NumFluent, PDDLNumber> typeCostFluent = problemNumMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("doctor_type_cost")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        System.out.println(" type cost fluents : "+ typeCostFluent);
-
+        
+        //get cost values of general/ specialist types
         for (Map.Entry<NumFluent, PDDLNumber> entry : typeCostFluent.entrySet()) {
-            String fullName = entry.getKey().toString();  // Get full name (or use getName() if appropriate)
+            String fullName = entry.getKey().toString();  
             
             if (fullName.contains("general")) {
                 genCost = entry.getValue().getNumber().doubleValue();;
@@ -87,32 +89,33 @@ public class OutOfPlace implements SearchHeuristic {
             }
         }
 
+        //filter for doctor specialisation type
         Map<BoolPredicate, Boolean> doctorType = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("specialises_in")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        System.out.println("doctor type fluents : "+ doctorType);
+    
 
         Map<String, Double> doctorCosts = new HashMap<>();
 
-        // Iterate through the doctor specializations and assign the corresponding costs
+        // iterate through the doctor specialisations and assign the corresponding costs
         for (Map.Entry<BoolPredicate, Boolean> entry : doctorType.entrySet()) {
             String fullName = entry.getKey().toString();  
             boolean isSpecialist = entry.getValue();  
 
-            // Get the doctor ID and specialization type from the full name
-            String[] parts = fullName.split(" ");  // Split based on spaces to get doctor ID and specialization type
-            String doctorId = parts[1];  // Doctor ID will be the second part
-            String specializationType = parts[2];  // Specialization type will be the third part (general/specialist)
+            // get the doctor ID and specialization type from the full name
+            String[] parts = fullName.split(" ");  // split  to get doctor ID and specialization type
+            String doctorId = parts[1];  // store doctor ID
+            String specialisationType = parts[2];  // store specialisation type 
 
-            // Assign the cost based on specialization
-            if (specializationType.contains("general")) {
-                doctorCosts.put(doctorId, genCost);  // If general, assign general cost
-            } else if (specializationType.contains("specialist")) {
-                doctorCosts.put(doctorId, specCost);  // If specialist, assign specialist cost
+            // assign the cost based on specialisation
+            if (specialisationType.contains("general")) {
+                doctorCosts.put(doctorId, genCost);  
+            } else if (specialisationType.contains("specialist")) {
+                doctorCosts.put(doctorId, specCost);  
             }
         }
         //System.out.println(doctorCosts);
 
         // for (Map.Entry<NumFluent, PDDLNumber> entry : typeCostFluent.entrySet()) {
-        //     String fullName = entry.getKey().toString();  // Get full name (or use getName() if appropriate)
+        //     String fullName = entry.getKey().toString();  
             
         //     if (fullName.contains("general")) {
         //         genCost = entry.getValue().getNumber().doubleValue();;
@@ -144,10 +147,9 @@ public class OutOfPlace implements SearchHeuristic {
 
         // minCost = specAppointmentCost + genAppointmentCost;
 
-        //More dynamic way to calculate remaining cost left - needs testing
+        //More dynamic way to calculate future cost 
         BitSet boolFluents = s.getBoolFluents();
 
-        //System.out.println(boolFluents);
 
         Map<String, Double> patientCostMap = new HashMap<>();
         Set<String> alreadyScheduledPatients = new HashSet<>();
@@ -159,13 +161,11 @@ public class OutOfPlace implements SearchHeuristic {
 
                 int index = pred.getId();
                 boolean isScheduled = boolFluents.get(index); 
-               
-                //boolean isScheduled = s.holds(pred);
 
                 if (isScheduled) {
                     String[] parts = pred.toString().split(" ");
                     String patientId = parts[1];
-                    alreadyScheduledPatients.add(patientId);
+                    alreadyScheduledPatients.add(patientId); //Store patients who are already scheduled
                 }
 
                 else{
@@ -174,15 +174,12 @@ public class OutOfPlace implements SearchHeuristic {
                     String patientId = parts[1];
                     String doctorId = parts[2];
         
+                    //ignore already scheduled patients
                     if (alreadyScheduledPatients.contains(patientId)) {
                         continue; 
                     }
                     
-                    double doctorCost = doctorCosts.get(doctorId);
-                    
-                    //System.out.println("patient id" + patientId);
-                   
-                    //System.out.println("dr cost" + doctorCost);
+                    double doctorCost = doctorCosts.get(doctorId); //get cost of doctor
                     
                     patientCostMap.merge(patientId, doctorCost, Math::min);
                 }
@@ -191,39 +188,36 @@ public class OutOfPlace implements SearchHeuristic {
         System.out.println(patientCostMap);
         
         for (double cost : patientCostMap.values()) {
-            System.out.println(cost);
            
-            minCost += cost;  // Sum up the individual patient costs
+            minCost += cost;  // sum up the individual patient costs
         }
-        System.out.println(minCost);
             
         return minCost;
     }
 
+    //redundant function but kept for future uses
     public double getStateTotalDoctorCost(PDDLState s) {
 
-        //System.out.println(s);
-
-        // Look for the numeric fluent "total_doctor_cost"
+        //store all num fluents from problem file 
         Map<NumFluent, PDDLNumber> problemMap = problem.getInitNumFluentsValues();
 
-        //System.out.println(problemMap);
+        // filter for total_doctor_cost          
         NumFluent doctorCostFluent = problemMap.keySet().stream().filter(x -> x.getName().equals("total_doctor_cost")).findFirst().orElseThrow();
-        //System.out.println("doctor cost fluent: "+ doctorCostFluent);
+      
 
         if (doctorCostFluent == null) {
             System.err.println("Error: Fluent 'total_doctor_cost' not found.");
             return 0.0;  // Return a default value
         }
 
-        double fluentValue = s.fluentValue(doctorCostFluent); //get value of cost fluent
+        double fluentValue = s.fluentValue(doctorCostFluent); //get value of cost fluent in state
 
         if (Double.isNaN(fluentValue)) {
              System.err.println("Error: 'total_doctor_cost' is NaN in the current state.");
              return 0.0;  // Return a default value
          }
 
-        // Return the valid fluent value
+        // Return the fluent value
         return fluentValue;
     }
 
