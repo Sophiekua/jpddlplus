@@ -150,6 +150,7 @@ public class OutOfPlace implements SearchHeuristic {
         //System.out.println(boolFluents);
 
         Map<String, Double> patientCostMap = new HashMap<>();
+        Set<String> alreadyScheduledPatients = new HashSet<>();
 
         for (BoolPredicate pred : PDDLProblem.booleanFluents) {
 
@@ -161,29 +162,29 @@ public class OutOfPlace implements SearchHeuristic {
                
                 //boolean isScheduled = s.holds(pred);
 
-                if (!isScheduled) {
+                if (isScheduled) {
+                    String[] parts = pred.toString().split(" ");
+                    String patientId = parts[1];
+                    alreadyScheduledPatients.add(patientId);
+                }
+
+                else{
 
                     String[] parts = pred.toString().split(" ");
                     String patientId = parts[1];
                     String doctorId = parts[2];
         
+                    if (alreadyScheduledPatients.contains(patientId)) {
+                        continue; 
+                    }
+                    
                     double doctorCost = doctorCosts.get(doctorId);
-        
+                    
                     //System.out.println("patient id" + patientId);
                    
                     //System.out.println("dr cost" + doctorCost);
                     
-                    // If the patient already has a cost recorded, take the minimum between the current cost and the new cost
-                    if (!patientCostMap.containsKey(patientId)) {
-                        // Store the first cost for the patient if not already stored
-                        patientCostMap.put(patientId, doctorCost);
-                        //System.out.println("cost Map:" + patientCostMap);
-                    } else {
-                        // If already stored, update the cost to the minimum cost
-                        double currentCost = patientCostMap.get(patientId);
-                        patientCostMap.put(patientId, Math.min(currentCost, doctorCost));
-                        //System.out.println("cost Map:" + patientCostMap);
-                    }
+                    patientCostMap.merge(patientId, doctorCost, Math::min);
                 }
             }
         }
