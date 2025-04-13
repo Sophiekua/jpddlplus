@@ -34,7 +34,7 @@ public class OutOfPlace implements SearchHeuristic {
     @Override
     public float computeEstimate(State s) {
         int missingGoals = 0;
-        double currentDoctorCost = getStateTotalDoctorCost((PDDLState) s);
+        //double currentDoctorCost = getStateTotalDoctorCost((PDDLState) s);
         double futureDoctorCost = getMinFutureCost((PDDLState) s, (double) currentDoctorCost);
 
         Condition goals = this.problem.getGoals();
@@ -48,8 +48,6 @@ public class OutOfPlace implements SearchHeuristic {
                 }
             }
         }
-
-      
        
         float hValue = missingGoals + (float) futureDoctorCost;
         //float hValue = missingGoals + (float) cost;
@@ -64,7 +62,6 @@ public class OutOfPlace implements SearchHeuristic {
         double minCost = 0.0;
         double genCost = 0.0;
         double specCost = 0.0; 
-
         double genAppointmentCost = 0.0;
         double specAppointmentCost = 0.0;
 
@@ -73,7 +70,6 @@ public class OutOfPlace implements SearchHeuristic {
 
         //Get all bool fluents from problem file
         Map<BoolPredicate, Boolean> problemBoolMap =  problem.getInitBoolFluentsValues();
-
      
         //filter for doctor_type_cost
         Map<NumFluent, PDDLNumber> typeCostFluent = problemNumMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("doctor_type_cost")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -112,53 +108,14 @@ public class OutOfPlace implements SearchHeuristic {
                 doctorCosts.put(doctorId, specCost);  
             }
         }
-        //System.out.println(doctorCosts);
-
-        // for (Map.Entry<NumFluent, PDDLNumber> entry : typeCostFluent.entrySet()) {
-        //     String fullName = entry.getKey().toString();  
-            
-        //     if (fullName.contains("general")) {
-        //         genCost = entry.getValue().getNumber().doubleValue();;
-        //     } else if (fullName.contains("specialist")) {
-        //         specCost = entry.getValue().getNumber().doubleValue();
-        //     }
-        // }        
-        //System.out.println("gen cost: "+ genCost + "specCost: " + specCost);
-
-    
-        // System.out.println(problemBoolMap);
-
-        // Map<BoolPredicate, Boolean> genAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("general_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        // System.out.println(genAppointments);
-        // for (BoolPredicate i : genAppointments.keySet()){
-
-        //     genAppointmentCost += genCost;
-        // }
-
-        // System.out.println(genAppointmentCost);
-
-        // Map<BoolPredicate, Boolean> specAppointments = problemBoolMap.entrySet().stream().filter(entry -> entry.getKey().getName().equals("specialist_appointment")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        // System.out.println(specAppointments);
-        // for (BoolPredicate i : specAppointments.keySet()){
-
-        //     specAppointmentCost += specCost;
-        // }
-        // System.out.println(specAppointmentCost);
-
-        // minCost = specAppointmentCost + genAppointmentCost;
-
         //More dynamic way to calculate future cost 
         BitSet boolFluents = s.getBoolFluents();
-
-
         Map<String, Double> patientCostMap = new HashMap<>();
         Set<String> alreadyScheduledPatients = new HashSet<>();
 
         for (BoolPredicate pred : PDDLProblem.booleanFluents) {
 
-          
             if (pred.getName().contains("scheduled")) {
-
                 int index = pred.getId();
                 boolean isScheduled = boolFluents.get(index); 
 
@@ -167,9 +124,7 @@ public class OutOfPlace implements SearchHeuristic {
                     String patientId = parts[1];
                     alreadyScheduledPatients.add(patientId); //Store patients who are already scheduled
                 }
-
                 else{
-
                     String[] parts = pred.toString().split(" ");
                     String patientId = parts[1];
                     String doctorId = parts[2];
@@ -178,17 +133,13 @@ public class OutOfPlace implements SearchHeuristic {
                     if (alreadyScheduledPatients.contains(patientId)) {
                         continue; 
                     }
-                    
                     double doctorCost = doctorCosts.get(doctorId); //get cost of doctor
-                    
                     patientCostMap.merge(patientId, doctorCost, Math::min);
                 }
             }
         }
-        System.out.println(patientCostMap);
-        
+        //System.out.println(patientCostMap);
         for (double cost : patientCostMap.values()) {
-           
             minCost += cost;  // sum up the individual patient costs
         }
             
